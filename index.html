@@ -1,1 +1,643 @@
-<h1>My First AWS Projects in Private Subnet</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desi Book Wala — Apni Bhasha, Apni Kitaab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#fdf9f3; --bg2:#f3ece0; --ink:#1a1208; --ink2:#5a4e38;
+      --accent:#d4522a; --accent2:#e8b86d; --green:#2e7d4f;
+      --border:#ddd5c4; --card-bg:#fff;
+      --shadow:0 4px 24px rgba(26,18,8,.10);
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; z-index:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+      pointer-events:none; }
+
+    /* HEADER */
+    header { position:sticky; top:0; z-index:100; background:rgba(253,249,243,.93); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); padding:0 5%; display:flex; align-items:center; justify-content:space-between; height:66px; }
+    .logo { font-family:'Playfair Display',serif; font-size:1.42rem; font-weight:900; letter-spacing:-.3px; color:var(--ink); text-decoration:none; }
+    .logo .d { color:var(--accent); }
+    .logo .w { color:var(--green); }
+    nav { display:flex; gap:1.8rem; align-items:center; }
+    nav a { font-size:.87rem; font-weight:500; color:var(--ink2); text-decoration:none; transition:color .2s; }
+    nav a:hover { color:var(--accent); }
+    .nav-cta { background:var(--accent); color:#fff !important; padding:.42rem 1.1rem; border-radius:6px; }
+    .nav-cta:hover { background:#b03e1a !important; }
+    .cart-btn { position:relative; background:none; border:1.5px solid var(--border); border-radius:8px; padding:.42rem .7rem; cursor:pointer; font-size:1.1rem; transition:border-color .2s; }
+    .cart-btn:hover { border-color:var(--accent); }
+    .cart-count { position:absolute; top:-7px; right:-7px; background:var(--accent); color:#fff; font-size:.62rem; font-weight:700; border-radius:50%; width:18px; height:18px; display:none; align-items:center; justify-content:center; }
+    .cart-count.visible { display:flex; }
+
+    /* HERO */
+    .hero { position:relative; padding:80px 5% 70px; display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; overflow:hidden; }
+    .hero-bg-circle { position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,var(--accent2) 0%,transparent 70%); opacity:.16; right:-60px; top:-80px; pointer-events:none; }
+    .hero-flag { display:flex; gap:.4rem; margin-bottom:1rem; }
+    .flag-s { height:5px; border-radius:2px; width:36px; }
+    .hero-tag { display:inline-block; font-size:.74rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); background:rgba(212,82,42,.10); padding:.32rem .85rem; border-radius:100px; margin-bottom:1rem; }
+    .hero h1 { font-family:'Playfair Display',serif; font-size:clamp(2.2rem,3.6vw,3.4rem); font-weight:900; line-height:1.12; letter-spacing:-.02em; margin-bottom:1.1rem; }
+    .hero h1 em { font-style:italic; color:var(--accent); }
+    .hero p { font-size:1rem; color:var(--ink2); line-height:1.72; max-width:440px; margin-bottom:1.8rem; }
+    .hero-actions { display:flex; gap:1rem; flex-wrap:wrap; }
+    .btn-primary { background:var(--accent); color:#fff; border:none; padding:.72rem 1.7rem; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.93rem; font-weight:500; cursor:pointer; transition:background .2s,transform .15s,box-shadow .2s; box-shadow:0 4px 14px rgba(212,82,42,.28); }
+    .btn-primary:hover { background:#b03e1a; transform:translateY(-2px); box-shadow:0 8px 20px rgba(212,82,42,.35); }
+    .btn-outline { background:transparent; color:var(--ink); border:1.5px solid var(--border); padding:.72rem 1.7rem; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.93rem; font-weight:500; cursor:pointer; transition:border-color .2s,color .2s,transform .15s; }
+    .btn-outline:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-2px); }
+    .hero-visual { display:flex; justify-content:center; align-items:center; height:300px; }
+    .book-stack { position:relative; width:200px; height:260px; }
+    .book-stack .bi { position:absolute; border-radius:6px 12px 12px 6px; box-shadow:var(--shadow); }
+    .b1 { width:155px; height:220px; background:linear-gradient(135deg,#d4522a,#e8734e); bottom:0; left:15px; transform:rotate(-8deg); }
+    .b2 { width:150px; height:212px; background:linear-gradient(135deg,#2c5f8a,#4a8fc4); bottom:8px; left:45px; transform:rotate(2deg); }
+    .b3 { width:145px; height:205px; background:linear-gradient(135deg,#2e7d4f,#4cb87a); bottom:4px; left:30px; transform:rotate(-2deg); animation:float 4s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:rotate(-2deg) translateY(0);} 50%{transform:rotate(-2deg) translateY(-12px);} }
+
+    /* STATS */
+    .stats-bar { background:var(--ink); color:#fff; padding:1.2rem 5%; display:flex; gap:3rem; justify-content:center; flex-wrap:wrap; }
+    .stat { text-align:center; }
+    .stat-num { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:900; color:var(--accent2); }
+    .stat-label { font-size:.74rem; color:rgba(255,255,255,.45); letter-spacing:.08em; text-transform:uppercase; }
+
+    /* SEARCH */
+    .search-section { padding:50px 5% 40px; }
+    .search-wrap { position:relative; max-width:620px; }
+    .search-wrap input { width:100%; padding:.88rem 1.2rem .88rem 3rem; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:1rem; background:var(--card-bg); color:var(--ink); outline:none; transition:border-color .2s,box-shadow .2s; }
+    .search-wrap input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(212,82,42,.12); }
+    .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--ink2); pointer-events:none; }
+    #src-count { margin-top:.55rem; font-size:.83rem; color:var(--ink2); min-height:1.2em; }
+
+    /* SECTIONS */
+    .section { padding:44px 5%; }
+    .sec-hdr { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1.6rem; }
+    .sec-title { font-family:'Playfair Display',serif; font-size:1.65rem; font-weight:800; color:var(--ink); }
+    .see-all { font-size:.83rem; color:var(--accent); text-decoration:none; font-weight:500; }
+    .see-all:hover { opacity:.75; }
+
+    /* CATEGORIES */
+    .cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.85rem; }
+    .cat-pill { display:flex; flex-direction:column; align-items:center; gap:.42rem; padding:1.05rem .65rem; background:var(--card-bg); border:1.5px solid var(--border); border-radius:12px; cursor:pointer; transition:border-color .2s,transform .18s,box-shadow .2s; font-size:.79rem; font-weight:500; color:var(--ink2); text-align:center; }
+    .cat-pill:hover,.cat-pill.active { border-color:var(--accent); color:var(--accent); transform:translateY(-3px); box-shadow:var(--shadow); }
+    .cat-pill.active { background:rgba(212,82,42,.06); }
+    .cat-em { font-size:1.65rem; }
+
+    /* BOOKS GRID */
+    .books-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:1.35rem; }
+    .book-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; overflow:hidden; cursor:pointer; transition:transform .22s,box-shadow .22s; position:relative; }
+    .book-card:hover { transform:translateY(-6px); box-shadow:0 16px 36px rgba(26,18,8,.14); }
+    .book-cover { width:100%; aspect-ratio:2/3; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:.98rem; font-weight:700; color:#fff; padding:1.1rem; text-align:center; line-height:1.3; position:relative; overflow:hidden; }
+    .book-cover::after { content:''; position:absolute; left:0; top:0; bottom:0; width:6px; background:rgba(0,0,0,.18); }
+    .book-badge { position:absolute; top:.65rem; right:.65rem; background:var(--accent2); color:var(--ink); font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:.18rem .52rem; border-radius:100px; }
+    .book-info { padding:.82rem .9rem .9rem; }
+    .book-gtag { display:inline-block; font-size:.65rem; font-weight:600; background:var(--bg2); color:var(--ink2); padding:.15rem .5rem; border-radius:100px; margin-bottom:.38rem; letter-spacing:.04em; }
+    .book-title { font-family:'Playfair Display',serif; font-size:.9rem; font-weight:700; color:var(--ink); margin-bottom:.2rem; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .book-author { font-size:.74rem; color:var(--ink2); margin-bottom:.42rem; }
+    .book-meta { display:flex; align-items:center; justify-content:space-between; }
+    .book-rating { font-size:.76rem; color:#f5a623; }
+    .book-price { font-size:.87rem; font-weight:700; color:var(--accent); }
+
+    /* FEATURED STRIP */
+    .feat-strip { margin:0 5%; background:linear-gradient(125deg,#1a1208 60%,#3a2810); border-radius:20px; padding:2.8rem; display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:center; position:relative; overflow:hidden; }
+    .feat-strip::before { content:'"'; position:absolute; right:240px; top:-30px; font-family:'Playfair Display',serif; font-size:13rem; color:rgba(255,255,255,.04); line-height:1; pointer-events:none; }
+    .feat-tag { font-size:.7rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); margin-bottom:.7rem; }
+    .feat-strip h2 { font-family:'Playfair Display',serif; font-size:clamp(1.3rem,2.2vw,1.9rem); font-weight:700; color:#fff; margin-bottom:.55rem; line-height:1.2; }
+    .feat-strip p { font-size:.88rem; color:rgba(255,255,255,.58); line-height:1.66; max-width:480px; }
+    .feat-cover { width:115px; height:168px; border-radius:6px 12px 12px 6px; background:linear-gradient(135deg,#d4522a,#e8734e); box-shadow:-12px 12px 28px rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Playfair Display',serif; font-size:.88rem; font-weight:700; text-align:center; padding:.9rem; line-height:1.3; position:relative; flex-shrink:0; }
+    .feat-cover::after { content:''; position:absolute; left:0; top:0; bottom:0; width:6px; background:rgba(0,0,0,.2); border-radius:6px 0 0 6px; }
+
+    /* CONTACT */
+    .contact-section { padding:60px 5%; background:var(--bg2); }
+    .contact-inner { max-width:880px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:3.5rem; align-items:start; }
+    .contact-left h2 { font-family:'Playfair Display',serif; font-size:2rem; font-weight:900; color:var(--ink); margin-bottom:.6rem; line-height:1.2; }
+    .contact-left > p { font-size:.93rem; color:var(--ink2); line-height:1.72; margin-bottom:1.6rem; }
+    .owner-card { background:var(--card-bg); border:1.5px solid var(--border); border-radius:16px; padding:1.6rem; box-shadow:var(--shadow); }
+    .owner-avatar { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:900; color:#fff; margin-bottom:1rem; }
+    .owner-name { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:800; color:var(--ink); margin-bottom:.18rem; }
+    .owner-role { font-size:.78rem; color:var(--accent); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:1.1rem; }
+    .owner-links { display:flex; flex-direction:column; gap:.65rem; }
+    .owner-link { display:flex; align-items:center; gap:.65rem; font-size:.87rem; color:var(--ink2); text-decoration:none; transition:color .2s; word-break:break-all; }
+    .owner-link:hover { color:var(--accent); }
+    .licon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .licon.em { background:rgba(212,82,42,.12); }
+    .licon.li { background:rgba(10,102,194,.12); }
+    .contact-right h3 { font-family:'Playfair Display',serif; font-size:1.25rem; font-weight:700; color:var(--ink); margin-bottom:.9rem; }
+    .cform { display:flex; flex-direction:column; gap:.85rem; }
+    .cform input, .cform textarea { padding:.78rem 1rem; border:1.5px solid var(--border); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.93rem; background:var(--card-bg); color:var(--ink); outline:none; transition:border-color .2s,box-shadow .2s; resize:vertical; }
+    .cform input:focus,.cform textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(212,82,42,.10); }
+    .cform textarea { min-height:110px; }
+
+    /* NEWSLETTER */
+    .newsletter { margin:50px 5%; background:var(--card-bg); border:1.5px solid var(--border); border-radius:20px; padding:2.8rem; text-align:center; }
+    .newsletter h2 { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:800; color:var(--ink); margin-bottom:.55rem; }
+    .newsletter p { font-size:.88rem; color:var(--ink2); margin-bottom:1.3rem; }
+    .nl-form { display:flex; gap:.7rem; max-width:410px; margin:0 auto; }
+    .nl-form input { flex:1; padding:.72rem 1rem; border:1.5px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.93rem; background:var(--bg); color:var(--ink); outline:none; transition:border-color .2s; }
+    .nl-form input:focus { border-color:var(--accent); }
+
+    /* FOOTER */
+    footer { background:var(--ink); color:rgba(255,255,255,.5); padding:3rem 5% 2rem; }
+    .fg { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:2.5rem; margin-bottom:2.5rem; }
+    .flogo { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:900; color:#fff; margin-bottom:.65rem; }
+    .flogo .d { color:var(--accent); }
+    .flogo .w { color:#4cb87a; }
+    .fdesc { font-size:.82rem; line-height:1.72; max-width:230px; }
+    .fcol h4 { font-size:.74rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.27); margin-bottom:.82rem; }
+    .fcol a { display:block; font-size:.82rem; color:rgba(255,255,255,.5); text-decoration:none; margin-bottom:.4rem; transition:color .2s; }
+    .fcol a:hover { color:var(--accent2); }
+    .fbot { border-top:1px solid rgba(255,255,255,.08); padding-top:1.4rem; font-size:.77rem; text-align:center; }
+    .fbot a { color:var(--accent2); text-decoration:none; }
+
+    /* MODAL */
+    .modal-ov { position:fixed; inset:0; z-index:200; background:rgba(26,18,8,.55); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:2rem; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .modal-ov.open { opacity:1; pointer-events:all; }
+    .modal { background:var(--card-bg); border-radius:20px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 30px 80px rgba(26,18,8,.25); transform:translateY(20px); transition:transform .25s; position:relative; }
+    .modal-ov.open .modal { transform:translateY(0); }
+    .mcov { width:100%; height:210px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; color:#fff; border-radius:20px 20px 0 0; position:relative; }
+    .mcov::after { content:''; position:absolute; left:0; top:0; bottom:0; width:8px; background:rgba(0,0,0,.2); border-radius:20px 0 0 0; }
+    .mbody { padding:1.5rem 1.7rem 1.8rem; }
+    .mgenre { font-size:.72rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:.45rem; }
+    .mtitle { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:800; color:var(--ink); margin-bottom:.28rem; }
+    .mauth { color:var(--ink2); font-size:.88rem; margin-bottom:.7rem; }
+    .mrate { color:#f5a623; font-size:.88rem; margin-bottom:.9rem; }
+    .mdesc { font-size:.88rem; color:var(--ink2); line-height:1.75; margin-bottom:1.3rem; }
+    .mprice { font-size:1.45rem; font-weight:800; color:var(--accent); margin-bottom:1.1rem; }
+    .mactions { display:flex; gap:.85rem; }
+    .mclose { position:absolute; top:.9rem; right:.9rem; background:rgba(0,0,0,.38); color:#fff; border:none; border-radius:50%; width:34px; height:34px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+    .mclose:hover { background:rgba(0,0,0,.6); }
+
+    /* TOAST */
+    .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:.68rem 1.4rem; border-radius:100px; font-size:.86rem; opacity:0; transition:opacity .3s,transform .3s; z-index:999; pointer-events:none; white-space:nowrap; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .no-res { grid-column:1/-1; text-align:center; padding:4rem 0; color:var(--ink2); font-size:1rem; }
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .hero{grid-template-columns:1fr;text-align:center;}
+      .hero p{margin:0 auto 1.8rem;}
+      .hero-flag{justify-content:center;}
+      .hero-actions{justify-content:center;}
+      .hero-visual{height:190px;}
+      .book-stack{transform:scale(.75);}
+      .feat-strip{grid-template-columns:1fr;}
+      .fg{grid-template-columns:1fr 1fr;}
+      .contact-inner{grid-template-columns:1fr;}
+    }
+    @media(max-width:640px){
+      nav a:not(.nav-cta){display:none;}
+      .fg{grid-template-columns:1fr;}
+      .nl-form{flex-direction:column;}
+      .stats-bar{gap:1.4rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="#"><span class="d">Desi</span>-Book-<span class="w">Wala</span></a>
+  <nav>
+    <a href="#books">Books</a>
+    <a href="#categories">Genres</a>
+    <a href="#contact">Contact</a>
+    <a href="#newsletter" class="nav-cta">Subscribe</a>
+  </nav>
+  <button class="cart-btn" id="cart-btn" title="Cart">🛒<span class="cart-count" id="cart-count">0</span></button>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-circle"></div>
+  <div>
+    <div class="hero-flag">
+      <div class="flag-s" style="background:#FF9933;"></div>
+      <div class="flag-s" style="background:#ccc;"></div>
+      <div class="flag-s" style="background:#138808;"></div>
+    </div>
+    <span class="hero-tag">🇮🇳 Proudly Desi &bull; 42+ Best Books</span>
+    <h1>Apni Bhasha,<br>Apni <em>Kitaab</em></h1>
+    <p>Simple English summaries of the world's most powerful books — hand-picked for every curious Indian reader. Self-help, finance, fiction, poetry &amp; more.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('books').scrollIntoView({behavior:'smooth'})">Browse All Books</button>
+      <button class="btn-outline" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Explore Genres</button>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="book-stack">
+      <div class="bi b1"></div>
+      <div class="bi b2"></div>
+      <div class="bi b3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">42+</div><div class="stat-label">Books Listed</div></div>
+  <div class="stat"><div class="stat-num">9</div><div class="stat-label">Genres</div></div>
+  <div class="stat"><div class="stat-num">₹149</div><div class="stat-label">Starting Price</div></div>
+  <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Desi Pride</div></div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-section">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search by title, author, or genre…" />
+  </div>
+  <div id="src-count"></div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="section" id="categories">
+  <div class="sec-hdr">
+    <h2 class="sec-title">Browse by Genre</h2>
+    <a href="#" class="see-all" onclick="filterBooks('All');return false;">Show All</a>
+  </div>
+  <div class="cat-grid" id="cat-grid"></div>
+</section>
+
+<!-- BOOKS -->
+<section class="section" id="books">
+  <div class="sec-hdr">
+    <h2 class="sec-title" id="sec-books-title">All Books</h2>
+  </div>
+  <div class="books-grid" id="books-grid"></div>
+</section>
+
+<!-- FEATURED -->
+<div class="feat-strip" id="featured">
+  <div>
+    <div class="feat-tag">✦ Desi Book Wala — Editor's Pick of the Month</div>
+    <h2>The Psychology of Money</h2>
+    <p>Morgan Housel teaches you how to think about money the right way. Simple stories, big lessons — this book will change how you save, spend, and invest forever.</p>
+    <br>
+    <button class="btn-primary" onclick="openByTitle('The Psychology of Money')">View This Book →</button>
+  </div>
+  <div class="feat-cover">The Psychology of Money</div>
+</div>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="contact-inner">
+    <div class="contact-left">
+      <h2>Get in Touch</h2>
+      <p>Have a question about a book? Want to suggest a title? Or just want to say hello? We read every message!</p>
+      <div class="owner-card">
+        <div class="owner-avatar">MS</div>
+        <div class="owner-name">MD Sahil</div>
+        <div class="owner-role">Founder &amp; Owner — Desi Book Wala</div>
+        <div class="owner-links">
+          <a class="owner-link" href="mailto:mdsahil@example.com">
+            <span class="licon em">📧</span>
+            mdsahil@example.com
+          </a>
+          <a class="owner-link" href="https://www.linkedin.com/in/md-sahil-aa66ba178/" target="_blank" rel="noopener">
+            <span class="licon li">💼</span>
+            linkedin.com/in/md-sahil-aa66ba178
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="contact-right">
+      <h3>Send a Message</h3>
+      <form class="cform" onsubmit="submitContact(event)">
+        <input type="text" placeholder="Your Name" required />
+        <input type="email" placeholder="Your Email" required />
+        <input type="text" placeholder="Subject (optional)" />
+        <textarea placeholder="Your message…" required></textarea>
+        <button type="submit" class="btn-primary">Send Message ✉️</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<div class="newsletter" id="newsletter">
+  <h2>📬 Stay Updated, Stay Ahead</h2>
+  <p>Get monthly book picks, deals &amp; reading lists from MD Sahil — straight to your inbox. Join 5,000+ readers!</p>
+  <form class="nl-form" onsubmit="subNewsletter(event)">
+    <input type="email" id="nl-email" placeholder="your@email.com" required />
+    <button type="submit" class="btn-primary">Subscribe</button>
+  </form>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fg">
+    <div>
+      <div class="flogo"><span class="d">Desi</span>-Book-<span class="w">Wala</span></div>
+      <div class="fdesc">A lovingly curated Indian bookstore for every kind of reader. Simple English. Real knowledge. Desi pride.</div>
+      <br>
+      <div style="font-size:.8rem;">Founded by <strong style="color:#fff;">MD Sahil</strong></div>
+    </div>
+    <div class="fcol">
+      <h4>Genres</h4>
+      <a href="#" onclick="filterBooks('Self-Help');return false;">Self-Help</a>
+      <a href="#" onclick="filterBooks('Finance');return false;">Finance</a>
+      <a href="#" onclick="filterBooks('Fiction');return false;">Fiction</a>
+      <a href="#" onclick="filterBooks('Poetry');return false;">Poetry</a>
+      <a href="#" onclick="filterBooks('Biography');return false;">Biography</a>
+    </div>
+    <div class="fcol">
+      <h4>Quick Links</h4>
+      <a href="#books">All Books</a>
+      <a href="#featured">Editor's Pick</a>
+      <a href="#newsletter">Newsletter</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="fcol">
+      <h4>Connect</h4>
+      <a href="mailto:mdsahil@example.com">📧 Email Us</a>
+      <a href="https://www.linkedin.com/in/md-sahil-aa66ba178/" target="_blank">💼 LinkedIn</a>
+    </div>
+  </div>
+  <div class="fbot">
+    &copy; 2026 <strong style="color:#fff;">Desi Book Wala</strong> — Founded by
+    <a href="https://www.linkedin.com/in/md-sahil-aa66ba178/" target="_blank">MD Sahil</a>.
+    Made with ❤️ for Indian readers.
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal-ov" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mcov" id="mcov"></div>
+    <div class="mbody">
+      <div class="mgenre" id="mgenre"></div>
+      <div class="mtitle" id="mtitle"></div>
+      <div class="mauth" id="mauth"></div>
+      <div class="mrate" id="mrate"></div>
+      <div class="mdesc" id="mdesc"></div>
+      <div class="mprice" id="mprice"></div>
+      <div class="mactions">
+        <button class="btn-primary" id="mcart-btn">Add to Cart 🛒</button>
+        <button class="btn-outline" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════ DATA ═══════════ */
+const books = [
+  /* SELF-HELP */
+  {id:0, title:"Atomic Habits", author:"James Clear", genre:"Self-Help", price:349, rating:4.8, badge:"Bestseller",
+   color:"linear-gradient(135deg,#d4522a,#e8734e)",
+   desc:"Small changes every day = big results. James Clear shows you how tiny 1% improvements, done consistently, can completely transform your life. Packed with real examples and simple steps."},
+  {id:1, title:"The Power of Now", author:"Eckhart Tolle", genre:"Self-Help", price:299, rating:4.6,
+   color:"linear-gradient(135deg,#8a6c2c,#c9a450)",
+   desc:"Stop living in the past or worrying about the future. This book teaches you to live in the present moment and find real peace inside yourself. Simple ideas that can change everything."},
+  {id:2, title:"Can't Hurt Me", author:"David Goggins", genre:"Self-Help", price:399, rating:4.7, badge:"Powerful",
+   color:"linear-gradient(135deg,#2a2a2a,#555)",
+   desc:"David Goggins went from an overweight, broken person to a US Navy SEAL and ultra-marathon runner. This book shows you how to master your mind and push past every limit you think you have."},
+  {id:3, title:"The 5 AM Club", author:"Robin Sharma", genre:"Self-Help", price:279, rating:4.4,
+   color:"linear-gradient(135deg,#d4700a,#f09630)",
+   desc:"Wake up at 5 AM and rule the morning. Robin Sharma shares a simple, powerful routine that high performers follow to stay ahead of everyone else — and it starts before sunrise."},
+  {id:4, title:"Think Like a Monk", author:"Jay Shetty", genre:"Self-Help", price:319, rating:4.6, badge:"Trending",
+   color:"linear-gradient(135deg,#3d5a3e,#5a8f5c)",
+   desc:"Jay Shetty lived as a monk for three years and now shares those lessons in modern, simple English. Learn to calm your mind, find your purpose, and stop comparing yourself to others."},
+  {id:5, title:"The 7 Habits of Highly Effective People", author:"Stephen Covey", genre:"Self-Help", price:329, rating:4.7,
+   color:"linear-gradient(135deg,#1a4060,#2a6090)",
+   desc:"Seven powerful habits followed by the world's most successful people. This book teaches you to be proactive, set the right priorities, and build strong, trusting relationships."},
+  {id:6, title:"How to Win Friends & Influence People", author:"Dale Carnegie", genre:"Self-Help", price:249, rating:4.7, badge:"Classic",
+   color:"linear-gradient(135deg,#5c3000,#9a5000)",
+   desc:"The ultimate guide to connecting with people and making them like you. Dale Carnegie's simple rules have helped millions improve their social life, career, and confidence."},
+  {id:7, title:"The Subtle Art of Not Giving a F*ck", author:"Mark Manson", genre:"Self-Help", price:299, rating:4.4,
+   color:"linear-gradient(135deg,#7a1010,#c02020)",
+   desc:"Stop trying to be positive about everything. Mark Manson says the real key to a good life is choosing what truly matters to you — and letting go of everything else."},
+  {id:8, title:"Ikigai", author:"Héctor García", genre:"Self-Help", price:259, rating:4.5, badge:"Popular",
+   color:"linear-gradient(135deg,#c0392b,#e74c3c)",
+   desc:"The Japanese secret to a long, happy life. Ikigai means finding your reason to get up every morning. This book shares simple ideas from the world's longest-living people in Okinawa, Japan."},
+  {id:9, title:"Deep Work", author:"Cal Newport", genre:"Self-Help", price:299, rating:4.6,
+   color:"linear-gradient(135deg,#1a3a5a,#2a5a7a)",
+   desc:"In a world of constant distractions, the ability to focus deeply is a superpower. Cal Newport explains how to build this skill and get more meaningful work done in less time."},
+  {id:10, title:"The 48 Laws of Power", author:"Robert Greene", genre:"Self-Help", price:399, rating:4.4,
+   color:"linear-gradient(135deg,#1a1a1a,#3a3a3a)",
+   desc:"48 powerful rules used by kings, CEOs, and politicians throughout history. Some are dark, but all are real. Know these laws so no one can use them against you."},
+
+  /* FINANCE */
+  {id:11, title:"Rich Dad Poor Dad", author:"Robert Kiyosaki", genre:"Finance", price:249, rating:4.7, badge:"Must Read",
+   color:"linear-gradient(135deg,#1a6040,#2ea870)",
+   desc:"What the rich teach their kids about money that the poor do not. Robert explains the difference between assets and liabilities in the simplest way. Read this book first before any other finance book."},
+  {id:12, title:"The Psychology of Money", author:"Morgan Housel", genre:"Finance", price:329, rating:4.8, badge:"Bestseller",
+   color:"linear-gradient(135deg,#1e3a5f,#2d6ea8)",
+   desc:"Money is about behaviour, not maths. Morgan Housel tells 19 short, powerful stories that explain how people really think about wealth, saving, and investing. Easy to read and very eye-opening."},
+  {id:13, title:"Think and Grow Rich", author:"Napoleon Hill", genre:"Finance", price:199, rating:4.5,
+   color:"linear-gradient(135deg,#7a3000,#b05010)",
+   desc:"Napoleon Hill studied 500 of the richest people in history and found 13 common steps they all followed. This book is a step-by-step guide to building the wealth mindset."},
+  {id:14, title:"The Intelligent Investor", author:"Benjamin Graham", genre:"Finance", price:449, rating:4.6,
+   color:"linear-gradient(135deg,#1a3a5a,#244f7a)",
+   desc:"Warren Buffett calls this the best investing book ever written. Benjamin Graham teaches you how to invest in stocks safely, patiently, and intelligently without losing your money."},
+  {id:15, title:"Let's Talk Money", author:"Monika Halan", genre:"Finance", price:289, rating:4.7, badge:"🇮🇳 Indian",
+   color:"linear-gradient(135deg,#0f5c3a,#1a9060)",
+   desc:"The best personal finance book written for Indians. Monika Halan explains insurance, mutual funds, savings, and budgeting in very simple Hindi-English language. Perfect for beginners."},
+  {id:16, title:"The Millionaire Next Door", author:"Thomas Stanley", genre:"Finance", price:319, rating:4.5,
+   color:"linear-gradient(135deg,#3d3000,#7a6000)",
+   desc:"Most millionaires do not look rich at all. They live simply and save smartly. This book reveals the real daily habits of ordinary wealthy people — and shows you how to copy them."},
+  {id:17, title:"Zero to One", author:"Peter Thiel", genre:"Finance", price:329, rating:4.5, badge:"Startup",
+   color:"linear-gradient(135deg,#0a2a4a,#1a4a7a)",
+   desc:"PayPal founder Peter Thiel says the best businesses do not compete — they create something completely new. A must-read if you want to start a business or think differently about success."},
+
+  /* FICTION */
+  {id:18, title:"The Alchemist", author:"Paulo Coelho", genre:"Fiction", price:279, rating:4.7, badge:"Beloved",
+   color:"linear-gradient(135deg,#7a4010,#d08040)",
+   desc:"A shepherd boy travels across the desert chasing his dream. A simple story with a very deep meaning. Paulo Coelho's masterpiece teaches you to listen to your heart and follow your dreams."},
+  {id:19, title:"1984", author:"George Orwell", genre:"Fiction", price:249, rating:4.8,
+   color:"linear-gradient(135deg,#1a1a2e,#16213e)",
+   desc:"A dark story about a world where the government controls everything you think and say. Scary, but very important. A timeless warning about freedom, truth, and the dangers of too much power."},
+  {id:20, title:"To Kill a Mockingbird", author:"Harper Lee", genre:"Fiction", price:299, rating:4.8,
+   color:"linear-gradient(135deg,#3a5a30,#5a8a48)",
+   desc:"A young girl watches her father — a lawyer — defend a Black man wrongly accused of a crime. A powerful story about justice, kindness, and having the courage to do the right thing."},
+  {id:21, title:"The Kite Runner", author:"Khaled Hosseini", genre:"Fiction", price:319, rating:4.8, badge:"Emotional",
+   color:"linear-gradient(135deg,#5a2a10,#9a4a20)",
+   desc:"A story of two childhood friends in Afghanistan — one rich, one poor. A powerful tale of guilt, love, and redemption. So moving and simple that you will finish it in two sittings."},
+  {id:22, title:"The Monk Who Sold His Ferrari", author:"Robin Sharma", genre:"Fiction", price:249, rating:4.4,
+   color:"linear-gradient(135deg,#8a4000,#d06000)",
+   desc:"A famous, successful lawyer gives up everything and goes to India to find true happiness. He comes back with 7 powerful life lessons. A simple story with a message that will stay with you forever."},
+  {id:23, title:"Animal Farm", author:"George Orwell", genre:"Fiction", price:199, rating:4.7,
+   color:"linear-gradient(135deg,#2a5a20,#4a8a38)",
+   desc:"A short story about farm animals who take over from their human owner. But soon, some animals become exactly like the humans they replaced. A sharp, clever lesson about power and politics."},
+  {id:24, title:"The Diary of Anne Frank", author:"Anne Frank", genre:"Fiction", price:199, rating:4.9, badge:"Historic",
+   color:"linear-gradient(135deg,#6a3a00,#a85e00)",
+   desc:"Anne Frank hid from the Nazis for two years and wrote everything in her diary. Her simple, honest, brave words are one of the most powerful things ever written by any human being."},
+
+  /* POETRY */
+  {id:25, title:"Milk and Honey", author:"Rupi Kaur", genre:"Poetry", price:229, rating:4.4, badge:"Trending",
+   color:"linear-gradient(135deg,#b8860b,#daa520)",
+   desc:"Short, honest poems about love, pain, and healing written in very simple English. Rupi Kaur's words touch your heart immediately. Perfect for anyone who has ever been hurt and found the strength to recover."},
+  {id:26, title:"The Sun and Her Flowers", author:"Rupi Kaur", genre:"Poetry", price:249, rating:4.5,
+   color:"linear-gradient(135deg,#8b4513,#cd853f)",
+   desc:"A journey through heartbreak and growth. Rupi writes about finding yourself again after losing love. Beautiful, simple, and deeply human — a book you will keep coming back to."},
+  {id:27, title:"Rumi: Selected Poems", author:"Rumi", genre:"Poetry", price:279, rating:4.9, badge:"Timeless",
+   color:"linear-gradient(135deg,#5c3870,#9a5fb8)",
+   desc:"The 800-year-old Persian poet whose words feel written for today. Rumi's poems about love, God, and the soul are simple on the surface but deeply wise underneath. Unforgettable."},
+  {id:28, title:"Where the Sidewalk Ends", author:"Shel Silverstein", genre:"Poetry", price:199, rating:4.8,
+   color:"linear-gradient(135deg,#1a5a3a,#2a8a5a)",
+   desc:"Funny, clever, and wise poems that are perfect for all ages. Shel Silverstein uses very simple words to say surprisingly deep things. A book you will enjoy at age 10 and age 40 equally."},
+
+  /* BIOGRAPHY */
+  {id:29, title:"Wings of Fire", author:"A.P.J. Abdul Kalam", genre:"Biography", price:199, rating:4.9, badge:"🇮🇳 Desi",
+   color:"linear-gradient(135deg,#d4522a,#f07050)",
+   desc:"India's Missile Man and beloved President tells his own story — from a poor fishing village in Tamil Nadu to leading India's space and missile programs. Simple, inspiring, and every Indian must read this."},
+  {id:30, title:"Steve Jobs", author:"Walter Isaacson", genre:"Biography", price:449, rating:4.5,
+   color:"linear-gradient(135deg,#1a1a1a,#444)",
+   desc:"The full story of Apple's founder — his genius, his anger, his creativity, and his failures. A fascinating, honest look at what it really takes to think differently and change the world."},
+  {id:31, title:"Becoming", author:"Michelle Obama", genre:"Biography", price:379, rating:4.9, badge:"Inspiring",
+   color:"linear-gradient(135deg,#1a3a6a,#2a5fa0)",
+   desc:"Michelle Obama shares her journey from a small apartment in Chicago to the White House. Warm, honest, and deeply inspiring — especially for anyone who is the first in their family to succeed."},
+  {id:32, title:"Long Walk to Freedom", author:"Nelson Mandela", genre:"Biography", price:399, rating:4.8,
+   color:"linear-gradient(135deg,#1a4020,#2a6030)",
+   desc:"Mandela spent 27 years in prison for fighting apartheid racism. His autobiography is a story of incredible strength, patience, and hope. One of the greatest lives ever lived by any human."},
+  {id:33, title:"Elon Musk", author:"Walter Isaacson", genre:"Biography", price:499, rating:4.4, badge:"New",
+   color:"linear-gradient(135deg,#1a1a3a,#2a2a6a)",
+   desc:"The full, honest life story of the world's most talked-about entrepreneur. SpaceX, Tesla, Twitter — Isaacson reveals what drives Musk, what makes him brilliant, and what makes him difficult."},
+
+  /* HISTORY */
+  {id:34, title:"Sapiens", author:"Yuval Noah Harari", genre:"History", price:399, rating:4.7, badge:"Epic",
+   color:"linear-gradient(135deg,#3d1f00,#7a3d00)",
+   desc:"The complete story of human beings — from Stone Age cave people to smartphones. Harari explains how we became the most powerful species on Earth in very clear, exciting language. Mind-blowing."},
+  {id:35, title:"Homo Deus", author:"Yuval Noah Harari", genre:"History", price:379, rating:4.5,
+   color:"linear-gradient(135deg,#1a2a4a,#2a3a6a)",
+   desc:"What will happen to humans in the future? Harari looks ahead at artificial intelligence, immortality, and what happens when machines become smarter than us. Thought-provoking and very readable."},
+  {id:36, title:"The Discovery of India", author:"Jawaharlal Nehru", genre:"History", price:349, rating:4.6, badge:"🇮🇳 Classic",
+   color:"linear-gradient(135deg,#0f4030,#1a6048)",
+   desc:"Nehru wrote this powerful book while sitting in prison. It is the beautiful story of India's 5,000-year history — its culture, religions, and the long fight for freedom. Essential for every Indian."},
+
+  /* SCIENCE */
+  {id:37, title:"Thinking, Fast and Slow", author:"Daniel Kahneman", genre:"Science", price:369, rating:4.6,
+   color:"linear-gradient(135deg,#1a2a5a,#2a3a8a)",
+   desc:"Nobel Prize winner Daniel Kahneman explains that your brain has two systems — one fast and emotional, one slow and logical. Understanding both will improve every important decision you make."},
+  {id:38, title:"A Brief History of Time", author:"Stephen Hawking", genre:"Science", price:299, rating:4.6,
+   color:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",
+   desc:"Hawking explains black holes, the Big Bang, and the nature of time in language that anyone can understand. Science has never been this exciting, clear, and mind-expanding."},
+  {id:39, title:"The Body", author:"Bill Bryson", genre:"Science", price:349, rating:4.6,
+   color:"linear-gradient(135deg,#3a0a5a,#6a1a9a)",
+   desc:"A funny and fascinating guided tour of the human body. Bryson explains how your heart, lungs, brain, and gut work in plain English that anyone — including non-science people — can enjoy."},
+
+  /* MEMOIR */
+  {id:40, title:"Educated", author:"Tara Westover", genre:"Memoir", price:329, rating:4.8,
+   color:"linear-gradient(135deg,#1f3d5c,#2d6080)",
+   desc:"A girl grew up with no school, no birth certificate, and a family that refused to trust the outside world. She taught herself and went all the way to Cambridge University. An incredible true story."},
+  {id:41, title:"I Am Malala", author:"Malala Yousafzai", genre:"Memoir", price:279, rating:4.8, badge:"Brave",
+   color:"linear-gradient(135deg,#1a3a1a,#2a6a2a)",
+   desc:"The true story of a Pakistani girl who stood up for girls' right to education, got shot by the Taliban, survived, and became the youngest Nobel Peace Prize winner. Brave and inspiring."},
+];
+
+const categories = [
+  {label:"All",       emoji:"📚"},
+  {label:"Self-Help", emoji:"🌱"},
+  {label:"Finance",   emoji:"💰"},
+  {label:"Fiction",   emoji:"🔮"},
+  {label:"Poetry",    emoji:"✍️"},
+  {label:"Biography", emoji:"🎭"},
+  {label:"History",   emoji:"🏺"},
+  {label:"Memoir",    emoji:"📖"},
+  {label:"Science",   emoji:"🔬"},
+];
+
+let activeFilter = "All";
+let cartCount = 0;
+
+function renderCats() {
+  document.getElementById('cat-grid').innerHTML = categories.map(c =>
+    `<div class="cat-pill ${c.label===activeFilter?'active':''}" onclick="filterBooks('${c.label}')">
+      <span class="cat-em">${c.emoji}</span>${c.label}
+    </div>`).join('');
+}
+
+function renderBooks(list) {
+  const g = document.getElementById('books-grid');
+  if (!list.length) { g.innerHTML=`<div class="no-res">📭<br>No books found. Try a different search.</div>`; return; }
+  g.innerHTML = list.map(b =>
+    `<div class="book-card" onclick="openModal(${b.id})">
+      <div class="book-cover" style="background:${b.color}">
+        ${b.badge?`<span class="book-badge">${b.badge}</span>`:''}${b.title}
+      </div>
+      <div class="book-info">
+        <div class="book-gtag">${b.genre}</div>
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">by ${b.author}</div>
+        <div class="book-meta">
+          <span class="book-rating">★ ${b.rating}</span>
+          <span class="book-price">₹${b.price}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterBooks(genre) {
+  activeFilter = genre;
+  document.getElementById('sec-books-title').textContent = genre==='All'?'All Books':genre+' Books';
+  document.getElementById('search-input').value = '';
+  document.getElementById('src-count').textContent = '';
+  renderBooks(genre==='All'?books:books.filter(b=>b.genre===genre));
+  renderCats();
+  document.getElementById('books').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  if (!q) {
+    renderBooks(activeFilter==='All'?books:books.filter(b=>b.genre===activeFilter));
+    document.getElementById('src-count').textContent=''; return;
+  }
+  const res = books.filter(b=>b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q)||b.genre.toLowerCase().includes(q));
+  renderBooks(res);
+  document.getElementById('src-count').textContent = res.length?`${res.length} result${res.length>1?'s':''} found`:'No results found';
+});
+
+function openModal(id) {
+  const b = books.find(x=>x.id===id); if(!b) return;
+  document.getElementById('mcov').style.background = b.color;
+  document.getElementById('mcov').textContent = b.title;
+  document.getElementById('mgenre').textContent = b.genre;
+  document.getElementById('mtitle').textContent = b.title;
+  document.getElementById('mauth').textContent = 'by '+b.author;
+  document.getElementById('mrate').textContent = '★'.repeat(Math.round(b.rating))+' '+b.rating+' / 5';
+  document.getElementById('mdesc').textContent = b.desc;
+  document.getElementById('mprice').textContent = '₹'+b.price;
+  document.getElementById('mcart-btn').onclick = ()=>{addToCart(b);closeModal();};
+  document.getElementById('modal-ov').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function openByTitle(title) { const b=books.find(x=>x.title===title); if(b) openModal(b.id); }
+function closeModal(e) {
+  if(e&&e.target!==document.getElementById('modal-ov')) return;
+  document.getElementById('modal-ov').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function addToCart(b) {
+  cartCount++;
+  const el=document.getElementById('cart-count');
+  el.textContent=cartCount; el.classList.add('visible');
+  showToast(`"${b.title}" added to cart! 🛒`);
+}
+
+let tTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(tTimer); tTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function submitContact(e) {
+  e.preventDefault(); showToast('✅ Message sent to MD Sahil! We will reply soon.'); e.target.reset();
+}
+function subNewsletter(e) {
+  e.preventDefault(); showToast('✅ Subscribed! Welcome to Desi Book Wala 🎉');
+  document.getElementById('nl-email').value='';
+}
+
+renderCats();
+renderBooks(books);
+</script>
+</body>
+</html>
